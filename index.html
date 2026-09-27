@@ -1,0 +1,1133 @@
+```html
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta
+  name="viewport"
+  content="width=device-width,
+           initial-scale=1,
+           maximum-scale=1,
+           user-scalable=no"
+>
+
+<title>Barcode Scanner</title>
+
+<script src="https://unpkg.com/html5-qrcode"></script>
+
+<style>
+
+* {
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  margin: 0;
+  font-family:
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Arial,
+    sans-serif;
+  background: #f3f4f6;
+  color: #111827;
+}
+
+.header {
+  background: #111827;
+  color: white;
+  padding: 20px;
+  text-align: center;
+}
+
+.header h1 {
+  margin: 0;
+  font-size: 24px;
+}
+
+.header p {
+  margin: 6px 0 0;
+  font-size: 14px;
+  color: #d1d5db;
+}
+
+.container {
+  width: 100%;
+  max-width: 600px;
+  margin: auto;
+  padding: 14px;
+}
+
+.card {
+  background: white;
+  border-radius: 16px;
+  padding: 14px;
+  margin-bottom: 12px;
+  box-shadow:
+    0 4px 15px
+    rgba(0,0,0,0.08);
+}
+
+#reader {
+  width: 100%;
+  overflow: hidden;
+  border-radius: 12px;
+  background: black;
+  min-height: 250px;
+}
+
+#reader video {
+  width: 100% !important;
+  height: auto !important;
+}
+
+button {
+  width: 100%;
+  border: none;
+  border-radius: 12px;
+  padding: 15px;
+  margin-top: 10px;
+  font-size: 17px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+button:active {
+  transform: scale(0.98);
+}
+
+button:disabled {
+  opacity: 0.5;
+}
+
+.start {
+  background: #16a34a;
+  color: white;
+}
+
+.stop {
+  background: #dc2626;
+  color: white;
+}
+
+.status {
+  margin-top: 12px;
+  padding: 12px;
+  background: #eef2ff;
+  border-radius: 10px;
+  text-align: center;
+  font-size: 14px;
+}
+
+.error {
+  display: none;
+  margin-top: 10px;
+  padding: 12px;
+  border-radius: 10px;
+  background: #fee2e2;
+  color: #991b1b;
+  line-height: 1.5;
+  word-break: break-word;
+}
+
+.last-title {
+  color: #6b7280;
+  margin-bottom: 8px;
+}
+
+.last {
+  font-size: 25px;
+  font-weight: 800;
+  word-break: break-all;
+}
+
+.count-label {
+  text-align: center;
+  color: #6b7280;
+  margin-bottom: 5px;
+}
+
+.count {
+  font-size: 34px;
+  font-weight: 800;
+  text-align: center;
+}
+
+.recent-title {
+  font-weight: 700;
+  margin-bottom: 10px;
+}
+
+.recent-row {
+  padding: 10px 0;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.recent-row:last-child {
+  border-bottom: none;
+}
+
+.recent-code {
+  font-weight: 700;
+  word-break: break-all;
+}
+
+.recent-time {
+  font-size: 12px;
+  color: #6b7280;
+  margin-top: 3px;
+}
+
+.notice {
+  margin-top: 12px;
+  padding: 12px;
+  border-radius: 10px;
+  background: #fff7ed;
+  color: #9a3412;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+</style>
+
+</head>
+
+
+<body>
+
+
+<div class="header">
+
+  <h1>📦 Barcode Scanner</h1>
+
+  <p>
+    สแกน Barcode และบันทึกลง Google Sheet ทันที
+  </p>
+
+</div>
+
+
+<div class="container">
+
+
+  <!-- CAMERA -->
+
+  <div class="card">
+
+    <div id="reader"></div>
+
+
+    <button
+      id="startBtn"
+      class="start"
+      onclick="startScanner()"
+    >
+      📷 เปิดกล้อง
+    </button>
+
+
+    <button
+      id="stopBtn"
+      class="stop"
+      onclick="stopScanner()"
+      style="display:none"
+    >
+      ⛔ ปิดกล้อง
+    </button>
+
+
+    <div
+      id="status"
+      class="status"
+    >
+      พร้อมสแกน
+    </div>
+
+
+    <div
+      id="error"
+      class="error"
+    >
+    </div>
+
+
+    <div class="notice">
+
+      📱 <b>iPhone:</b><br>
+
+      เปิดหน้านี้ผ่าน Safari หรือ Chrome
+      แล้วกด <b>Allow</b> เมื่อระบบถามสิทธิ์กล้อง
+
+    </div>
+
+  </div>
+
+
+  <!-- COUNT -->
+
+  <div class="card">
+
+    <div class="count-label">
+      จำนวนที่สแกน
+    </div>
+
+    <div
+      id="count"
+      class="count"
+    >
+      0
+    </div>
+
+  </div>
+
+
+  <!-- LAST BARCODE -->
+
+  <div class="card">
+
+    <div class="last-title">
+      Barcode ล่าสุด
+    </div>
+
+    <div
+      id="last"
+      class="last"
+    >
+      -
+    </div>
+
+  </div>
+
+
+  <!-- RECENT -->
+
+  <div class="card">
+
+    <div class="recent-title">
+      📋 รายการล่าสุด
+    </div>
+
+    <div id="recent">
+      ยังไม่มีรายการ
+    </div>
+
+  </div>
+
+
+</div>
+
+
+<script>
+
+
+/******************************************************
+ * CONFIG
+ ******************************************************/
+
+/*
+ * สำคัญมาก
+ *
+ * ใส่ Web App URL ของ Google Apps Script
+ * ที่นี่
+ *
+ * ตัวอย่าง:
+ *
+ * https://script.google.com/macros/s/XXXXXXXX/exec
+ */
+
+const API_URL =
+  'https://script.google.com/macros/s/AKfycbynQ-Hm35v9GeL97kVtps994XtLb_o0j-y74YZVe-cnPnB5iH2Sx08Ipa4k4bL_H4q8cw/exec';
+
+
+/******************************************************
+ * VARIABLES
+ ******************************************************/
+
+let scanner = null;
+
+let running = false;
+
+let lastCode = '';
+
+let lastTime = 0;
+
+let count = 0;
+
+
+/******************************************************
+ * START SCANNER
+ ******************************************************/
+
+async function startScanner() {
+
+  hideError();
+
+
+  const startBtn =
+    document.getElementById(
+      'startBtn'
+    );
+
+
+  startBtn.disabled = true;
+
+
+  /*
+   * ตรวจสอบ Camera API
+   */
+
+  if (
+    !navigator.mediaDevices ||
+    !navigator.mediaDevices.getUserMedia
+  ) {
+
+    showError(
+      'Browser นี้ไม่รองรับการเปิดกล้อง'
+    );
+
+    startBtn.disabled = false;
+
+    return;
+
+  }
+
+
+  /*
+   * ตรวจสอบ API URL
+   */
+
+  if (
+    !API_URL ||
+    API_URL.indexOf(
+      'script.google.com'
+    ) === -1
+  ) {
+
+    showError(
+      '<b>ยังไม่ได้ตั้งค่า API_URL</b><br><br>' +
+      'กรุณาใส่ Web App URL ของ Google Apps Script'
+    );
+
+    startBtn.disabled = false;
+
+    return;
+
+  }
+
+
+  try {
+
+    setStatus(
+      'กำลังขอสิทธิ์ใช้กล้อง...'
+    );
+
+
+    /*
+     * ขอ Permission กล้อง
+     */
+
+    const stream =
+      await navigator.mediaDevices
+        .getUserMedia({
+
+          video: {
+            facingMode: {
+              ideal: 'environment'
+            }
+          },
+
+          audio: false
+
+        });
+
+
+    /*
+     * ได้ Permission แล้ว
+     * ปิด stream ชั่วคราว
+     */
+
+    stream
+      .getTracks()
+      .forEach(
+        function(track) {
+          track.stop();
+        }
+      );
+
+
+    setStatus(
+      'กำลังเปิดกล้อง...'
+    );
+
+
+    /*
+     * สร้าง Barcode Scanner
+     */
+
+    if (!scanner) {
+
+      scanner =
+        new Html5Qrcode(
+          'reader'
+        );
+
+    }
+
+
+    /*
+     * เปิดกล้องหลัง
+     */
+
+    await scanner.start(
+
+      {
+        facingMode:
+          'environment'
+      },
+
+      {
+
+        fps: 10,
+
+        qrbox: function(
+          width,
+          height
+        ) {
+
+          const min =
+            Math.min(
+              width,
+              height
+            );
+
+
+          return {
+
+            width:
+              Math.floor(
+                min * 0.80
+              ),
+
+            height:
+              Math.floor(
+                min * 0.35
+              )
+
+          };
+
+        },
+
+        aspectRatio:
+          1.7777778,
+
+        disableFlip: false
+
+      },
+
+      onScanSuccess,
+
+      onScanFailure
+
+    );
+
+
+    running = true;
+
+
+    document
+      .getElementById(
+        'startBtn'
+      )
+      .style.display =
+      'none';
+
+
+    document
+      .getElementById(
+        'stopBtn'
+      )
+      .style.display =
+      'block';
+
+
+    setStatus(
+      '🟢 กล้องพร้อม — สแกน Barcode ได้เลย'
+    );
+
+
+  }
+
+  catch (error) {
+
+    console.error(
+      'Camera Error:',
+      error
+    );
+
+
+    startBtn.disabled = false;
+
+
+    showError(
+
+      '<b>ไม่สามารถเปิดกล้องได้</b><br><br>' +
+
+      '<b>Error:</b> ' +
+
+      escapeHtml(
+        error.name || ''
+      ) +
+
+      '<br>' +
+
+      escapeHtml(
+        error.message || String(error)
+      )
+
+    );
+
+
+    setStatus(
+      '❌ เปิดกล้องไม่สำเร็จ'
+    );
+
+  }
+
+}
+
+
+/******************************************************
+ * SCAN SUCCESS
+ ******************************************************/
+
+function onScanSuccess(
+  decodedText,
+  decodedResult
+) {
+
+  const code =
+    String(
+      decodedText || ''
+    ).trim();
+
+
+  if (!code) {
+    return;
+  }
+
+
+  const now =
+    Date.now();
+
+
+  /*
+   * ป้องกัน Barcode เดิม
+   * ถูกอ่านซ้ำภายใน 2 วินาที
+   */
+
+  if (
+    code === lastCode &&
+    now - lastTime < 2000
+  ) {
+
+    return;
+
+  }
+
+
+  lastCode = code;
+
+  lastTime = now;
+
+
+  /*
+   * แสดง Barcode ล่าสุด
+   */
+
+  document
+    .getElementById(
+      'last'
+    )
+    .textContent =
+    code;
+
+
+  setStatus(
+    '⏳ กำลังบันทึก ' +
+    code
+  );
+
+
+  /*
+   * บันทึก
+   */
+
+  saveBarcode(code);
+
+}
+
+
+/******************************************************
+ * SAVE BARCODE
+ ******************************************************/
+
+async function saveBarcode(
+  barcode
+) {
+
+  try {
+
+    const response =
+      await fetch(
+
+        API_URL,
+
+        {
+
+          method: 'POST',
+
+          headers: {
+
+            'Content-Type':
+              'text/plain;charset=utf-8'
+
+          },
+
+          body:
+            JSON.stringify({
+
+              barcode:
+                barcode
+
+            })
+
+        }
+
+      );
+
+
+    const result =
+      await response.json();
+
+
+    if (
+      result &&
+      result.success
+    ) {
+
+
+      /*
+       * เพิ่มจำนวน
+       */
+
+      count++;
+
+
+      document
+        .getElementById(
+          'count'
+        )
+        .textContent =
+        count;
+
+
+      /*
+       * เพิ่มรายการล่าสุด
+       */
+
+      addRecent(
+        result
+      );
+
+
+      /*
+       * เสียง
+       */
+
+      playBeep();
+
+
+      /*
+       * แสดงสถานะ
+       */
+
+      setStatus(
+        '✅ บันทึกแล้ว — พร้อมสแกนรายการถัดไป'
+      );
+
+
+    }
+
+    else {
+
+      setStatus(
+        '❌ บันทึกไม่สำเร็จ'
+      );
+
+
+      showError(
+        result &&
+        result.message
+          ? result.message
+          : 'ไม่สามารถบันทึกข้อมูลได้'
+      );
+
+    }
+
+  }
+
+  catch (error) {
+
+    console.error(
+      'Save Error:',
+      error
+    );
+
+
+    showError(
+
+      '<b>ส่งข้อมูลไป Google Sheet ไม่สำเร็จ</b><br><br>' +
+
+      escapeHtml(
+        error.message ||
+        String(error)
+      )
+
+    );
+
+
+    setStatus(
+      '❌ เชื่อมต่อ Google Sheet ไม่สำเร็จ'
+    );
+
+  }
+
+}
+
+
+/******************************************************
+ * STOP SCANNER
+ ******************************************************/
+
+async function stopScanner() {
+
+  try {
+
+    if (
+      scanner &&
+      running
+    ) {
+
+      await scanner.stop();
+
+    }
+
+  }
+
+  catch (error) {
+
+    console.error(
+      error
+    );
+
+  }
+
+
+  running = false;
+
+
+  document
+    .getElementById(
+      'startBtn'
+    )
+    .style.display =
+    'block';
+
+
+  document
+    .getElementById(
+      'startBtn'
+    )
+    .disabled =
+    false;
+
+
+  document
+    .getElementById(
+      'stopBtn'
+    )
+    .style.display =
+    'none';
+
+
+  setStatus(
+    'กล้องปิดแล้ว'
+  );
+
+}
+
+
+/******************************************************
+ * ADD RECENT
+ ******************************************************/
+
+function addRecent(
+  result
+) {
+
+  const recent =
+    document
+      .getElementById(
+        'recent'
+      );
+
+
+  /*
+   * ลบข้อความ
+   * "ยังไม่มีรายการ"
+   */
+
+  if (
+    recent.textContent.trim() ===
+    'ยังไม่มีรายการ'
+  ) {
+
+    recent.innerHTML =
+      '';
+
+  }
+
+
+  const row =
+    document.createElement(
+      'div'
+    );
+
+
+  row.className =
+    'recent-row';
+
+
+  row.innerHTML =
+
+    '<div class="recent-code">' +
+
+      escapeHtml(
+        result.barcode
+      ) +
+
+    '</div>' +
+
+    '<div class="recent-time">' +
+
+      escapeHtml(
+        result.date || ''
+      ) +
+
+      ' ' +
+
+      escapeHtml(
+        result.time || ''
+      ) +
+
+    '</div>';
+
+
+  recent.prepend(
+    row
+  );
+
+}
+
+
+/******************************************************
+ * BEEP
+ ******************************************************/
+
+function playBeep() {
+
+  try {
+
+    const AudioContext =
+      window.AudioContext ||
+      window.webkitAudioContext;
+
+
+    if (!AudioContext) {
+      return;
+    }
+
+
+    const context =
+      new AudioContext();
+
+
+    const oscillator =
+      context.createOscillator();
+
+
+    const gain =
+      context.createGain();
+
+
+    oscillator.type =
+      'sine';
+
+
+    oscillator.frequency.value =
+      1000;
+
+
+    gain.gain.value =
+      0.15;
+
+
+    oscillator.connect(
+      gain
+    );
+
+
+    gain.connect(
+      context.destination
+    );
+
+
+    oscillator.start();
+
+
+    setTimeout(
+      function() {
+
+        oscillator.stop();
+
+        context.close();
+
+      },
+      120
+    );
+
+  }
+
+  catch (error) {
+
+    console.log(
+      'Beep Error:',
+      error
+    );
+
+  }
+
+}
+
+
+/******************************************************
+ * STATUS
+ ******************************************************/
+
+function setStatus(
+  message
+) {
+
+  document
+    .getElementById(
+      'status'
+    )
+    .innerHTML =
+    message;
+
+}
+
+
+/******************************************************
+ * ERROR
+ ******************************************************/
+
+function showError(
+  message
+) {
+
+  const box =
+    document
+      .getElementById(
+        'error'
+      );
+
+
+  box.innerHTML =
+    message;
+
+
+  box.style.display =
+    'block';
+
+}
+
+
+function hideError() {
+
+  const box =
+    document
+      .getElementById(
+        'error'
+      );
+
+
+  box.innerHTML =
+    '';
+
+
+  box.style.display =
+    'none';
+
+}
+
+
+/******************************************************
+ * ESCAPE HTML
+ ******************************************************/
+
+function escapeHtml(
+  value
+) {
+
+  return String(
+    value || ''
+  )
+
+  .replace(
+    /&/g,
+    '&amp;'
+  )
+
+  .replace(
+    /</g,
+    '&lt;'
+  )
+
+  .replace(
+    />/g,
+    '&gt;'
+  )
+
+  .replace(
+    /"/g,
+    '&quot;'
+  )
+
+  .replace(
+    /'/g,
+    '&#039;'
+  );
+
+}
+
+</script>
+
+</body>
+
+</html>
+```
